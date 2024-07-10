@@ -1,48 +1,56 @@
-import requests
-from bs4 import BeautifulSoup
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 import streamlit as st
 
 # Hàm tìm kiếm trên Amazon
 def search_amazon(query):
-  url = f"https://www.amazon.com/s?k={query}"
-  headers = {"User-Agent": "Mozilla/5.0"}
-  response = requests.get(url, headers=headers)
-  soup = BeautifulSoup(response.content, "html.parser")
+  driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+  driver.get(f"https://www.amazon.com/s?k={query}")
+  time.sleep(3)  # Đợi trang tải xong
   results = []
-  for item in soup.select(".s-result-item"):
-      title = item.select_one("h2 .a-link-normal")
-      if title:
-          title = title.get_text(strip=True)
-          link = "https://www.amazon.com" + item.select_one("h2 .a-link-normal")["href"]
+  items = driver.find_elements(By.CSS_SELECTOR, ".s-result-item")
+  for item in items:
+      title_element = item.find_element(By.CSS_SELECTOR, "h2 .a-link-normal")
+      if title_element:
+          title = title_element.text
+          link = title_element.get_attribute("href")
           results.append({"title": title, "link": link})
+  driver.quit()
   return results
 
 # Hàm tìm kiếm trên eBay
 def search_ebay(query):
-  url = f"https://www.ebay.com/sch/i.html?_nkw={query}"
-  response = requests.get(url)
-  soup = BeautifulSoup(response.content, "html.parser")
+  driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+  driver.get(f"https://www.ebay.com/sch/i.html?_nkw={query}")
+  time.sleep(3)  # Đợi trang tải xong
   results = []
-  for item in soup.select(".s-item"):
-      title = item.select_one(".s-item__title")
-      if title:
-          title = title.get_text(strip=True)
-          link = item.select_one(".s-item__link")["href"]
+  items = driver.find_elements(By.CSS_SELECTOR, ".s-item")
+  for item in items:
+      title_element = item.find_element(By.CSS_SELECTOR, ".s-item__title")
+      if title_element:
+          title = title_element.text
+          link = item.find_element(By.CSS_SELECTOR, ".s-item__link").get_attribute("href")
           results.append({"title": title, "link": link})
+  driver.quit()
   return results
 
 # Hàm tìm kiếm trên Bookbuy.vn
 def search_bookbuy(query):
-  url = f"https://www.bookbuy.vn/search?q={query}"
-  response = requests.get(url)
-  soup = BeautifulSoup(response.content, "html.parser")
+  driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+  driver.get(f"https://www.bookbuy.vn/search?q={query}")
+  time.sleep(3)  # Đợi trang tải xong
   results = []
-  for item in soup.select(".product-item"):
-      title = item.select_one(".product-title a")
-      if title:
-          title = title.get_text(strip=True)
-          link = "https://www.bookbuy.vn" + item.select_one(".product-title a")["href"]
+  items = driver.find_elements(By.CSS_SELECTOR, ".product-item")
+  for item in items:
+      title_element = item.find_element(By.CSS_SELECTOR, ".product-title a")
+      if title_element:
+          title = title_element.text
+          link = title_element.get_attribute("href")
           results.append({"title": title, "link": link})
+  driver.quit()
   return results
 
 # Tạo giao diện người dùng với Streamlit
